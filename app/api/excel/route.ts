@@ -1,3 +1,4 @@
+import { ChevronsUpDown } from 'lucide-react';
 import axios from "axios";
 import { wrapper } from "axios-cookiejar-support";
 import { CookieJar } from "tough-cookie";
@@ -73,10 +74,7 @@ function thutrongtuan(thu: string, batdau: string, ketthuc: string) {
   let currentDate = new Date(startDate);
   while (currentDate <= endDate) {
     if (currentDate.getDay() === thuIndex - 1) {
-      let day = currentDate.getDate().toString().padStart(2, '0');
-      let month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
-      let year = currentDate.getFullYear().toString();
-      return `${year}-${month}-${day}`;
+      return toDateString(currentDate);
     }
     currentDate.setDate(currentDate.getDate() + 1);
   }
@@ -84,7 +82,12 @@ function thutrongtuan(thu: string, batdau: string, ketthuc: string) {
   return "No such weekday found in the range";
 }
 
-
+function toDateString(currentDate: Date) {
+  let day = currentDate.getDate().toString().padStart(2, '0');
+  let month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+  let year = currentDate.getFullYear().toString();
+  return `${year}-${month}-${day}`;
+}
 export const GET = async (request: Request) => {
   // Lấy thông tin tài khoản từ URLSearchParams
   const urlParams = new URLSearchParams(request.url.split('?')[1]);
@@ -155,7 +158,6 @@ export const GET = async (request: Request) => {
   hiddenFields.forEach(input => {
     hiddenValues[(input as HTMLInputElement).name] = (input as HTMLInputElement).value;
   });
-  //lấy lịch học và trả về api
   const semester = (document.getElementById("drpSemester") as HTMLSelectElement).value;
   const term = (document.getElementById("drpTerm") as HTMLSelectElement).value;
   const type = (document.getElementById("drpType") as HTMLSelectElement).value;
@@ -241,11 +243,12 @@ export const GET = async (request: Request) => {
 
 
     }
-    
+    var lastUpdateTime = new Date();
     return new Response(
       JSON.stringify({
         HocKi: hocki,
         NamHoc: namhoc,
+        lastUpdateTime: toDateString(lastUpdateTime),
         SinhVien: sinhvien,
         TuanData: TuanData,
         LichHoc: LichHoc
