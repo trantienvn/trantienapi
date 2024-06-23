@@ -87,7 +87,7 @@ function toDateString(currentDate: Date) {
   let year = currentDate.getFullYear().toString();
   return `${year}-${month}-${day}`;
 }
-async function login(username: string, password: string){
+async function login(username: string, password: string) {
   const session = await client.get(urlLogin);
   const DOMsession = new JSDOM(session.data);
   const getAllFormElements = (element: HTMLFormElement) =>
@@ -107,7 +107,7 @@ async function login(username: string, password: string){
       value = username;
     } else if (key == "txtPassword") {
       if (password)
-      value = createHash("md5").update(password).digest("hex");
+        value = createHash("md5").update(password).digest("hex");
 
     }
     if (value) body.append(key, value);
@@ -133,8 +133,8 @@ export const POST = async (request: Request) => {
   // const username = urlParams.get('msv');
   // const password = urlParams.get('pwd');
   var loginsuccess = await login(username!, password!);
-  
-  
+
+
   if (loginsuccess.error) {
     return new Response(
       JSON.stringify(loginsuccess),
@@ -143,7 +143,7 @@ export const POST = async (request: Request) => {
           "content-type": "application/json",
         },
       }
-    
+
     )
   }
   // đăng nhập thành công thì kiểm tra có chuyển trang không nếu chuyển trang thì lấy tên sinh viên
@@ -198,6 +198,7 @@ export const POST = async (request: Request) => {
     const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
     const LichHoc = [];
     const TuanData = [];
+    var inputdata: { [key: string]: any } = {};
     let Tuan = 0;
     let ngayhoct = {
       Tu: "",
@@ -220,7 +221,7 @@ export const POST = async (request: Request) => {
         const DiaDiem = JSON.parse(JSON.stringify(jsonData[i]))[5];
         const Ngay = thutrongtuan(ThuNgay, parseDate(ngayhoct.Tu), parseDate(ngayhoct.Den));
         const gv = GiangVien.split('\n');
-        LichHoc.push( {
+        var simpledata = {
           STT,
           Tuan,
           Ngay,
@@ -231,7 +232,12 @@ export const POST = async (request: Request) => {
           GiangVien: gv[0],
           Meet: gv[1],
           DiaDiem
-        });
+        }
+        LichHoc.push(simpledata);
+        if (typeof inputdata[Ngay] !== 'undefined')
+          inputdata[Ngay] = [...inputdata[Ngay],simpledata];
+        else
+          inputdata[Ngay] = [simpledata];
       } else {
         Tuan++;
         const NgayHoc = lichtuan(TTuan);
@@ -253,16 +259,12 @@ export const POST = async (request: Request) => {
         NamHoc: namhoc,
         lastUpdateTime: toDateString(lastUpdateTime),
         SinhVien: sinhvien,
-        LichHoc: LichHoc,
+        LichHoc: inputdata,
         TuanData: TuanData,
-        
+
       }), {
       headers: {
         "content-type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods" : "GET, POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Credentials": "true",
       },
     }
     );
@@ -285,8 +287,8 @@ export const GET = async (request: Request) => {
   // const username = urlParams.get('msv');
   // const password = urlParams.get('pwd');
   var loginsuccess = await login(username!, password!);
-  
-  
+
+
   if (loginsuccess.error) {
     return new Response(
       JSON.stringify(loginsuccess),
@@ -295,7 +297,7 @@ export const GET = async (request: Request) => {
           "content-type": "application/json",
         },
       }
-    
+
     )
   }
   // đăng nhập thành công thì kiểm tra có chuyển trang không nếu chuyển trang thì lấy tên sinh viên
@@ -350,6 +352,7 @@ export const GET = async (request: Request) => {
     const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
     const LichHoc = [];
     const TuanData = [];
+    var inputdata: { [key: string]: any } = {};
     let Tuan = 0;
     let ngayhoct = {
       Tu: "",
@@ -372,7 +375,7 @@ export const GET = async (request: Request) => {
         const DiaDiem = JSON.parse(JSON.stringify(jsonData[i]))[5];
         const Ngay = thutrongtuan(ThuNgay, parseDate(ngayhoct.Tu), parseDate(ngayhoct.Den));
         const gv = GiangVien.split('\n');
-        LichHoc.push( {
+        var simpledata = {
           STT,
           Tuan,
           Ngay,
@@ -383,7 +386,12 @@ export const GET = async (request: Request) => {
           GiangVien: gv[0],
           Meet: gv[1],
           DiaDiem
-        });
+        }
+        LichHoc.push(simpledata);
+        if (typeof inputdata[Ngay] !== 'undefined')
+          inputdata[Ngay] = [...inputdata[Ngay],simpledata];
+        else
+          inputdata[Ngay] = [simpledata];
       } else {
         Tuan++;
         const NgayHoc = lichtuan(TTuan);
@@ -405,9 +413,9 @@ export const GET = async (request: Request) => {
         NamHoc: namhoc,
         lastUpdateTime: toDateString(lastUpdateTime),
         SinhVien: sinhvien,
-        LichHoc: LichHoc,
+        LichHoc: inputdata,
         TuanData: TuanData,
-        
+
       }), {
       headers: {
         "content-type": "application/json",
