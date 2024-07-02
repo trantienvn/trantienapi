@@ -8,8 +8,4 @@ export interface IMonHoc {
   GiangVien: string,
   Meet: string,
   DiaDiem: string,
-  NgayHoc: {
-    Tu: string,
-    Den: string
-  }
 }

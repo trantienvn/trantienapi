@@ -60,7 +60,7 @@ const LoginPage = () => {
         <div className="flex items-center space-x-2 text-muted dark:text-muted-foreground">
           <Command className="w-8 h-8" />
           <span className={cn("text-xl font-medium", poppins.className)}>
-            StudentHub
+            Sinh viên
           </span>
         </div>
         <div className="mt-auto text-muted dark:text-muted-foreground">
