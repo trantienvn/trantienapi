@@ -20,108 +20,46 @@ const client = wrapper(
 const urlLogin = "http://220.231.119.171/kcntt/login.aspx";
 
 function tinhtoan(tiethoc: string) {
-  if (typeof tiethoc !== 'string' || !tiethoc.includes(' --\u003E ')) {
-    //console.error("Invalid input format. Expected format: 'startPeriod --\u003E endPeriod'");
-    return undefined;
-  }
-  const vao = parseInt(tiethoc.split(' --\u003E ')[0]);
-  const ra = parseInt(tiethoc.split(' --\u003E ')[1]);
-  let giovao = "";
-  let giora = "";
-
-  switch (vao) {
-    case 1:
-      giovao = "6:45";
-      break;
-    case 2:
-      giovao = "7:40";
-      break;
-    case 3:
-      giovao = "8:40";
-      break;
-    case 4:
-      giovao = "9:40";
-      break;
-    case 5:
-      giovao = "10:35";
-      break;
-    case 6:
-      giovao = "13:00";
-      break;
-    case 7:
-      giovao = "13:55";
-      break;
-    case 8:
-      giovao = "14:55";
-      break;
-    case 9:
-      giovao = "15:55";
-      break;
-    case 10:
-      giovao = "16:50";
-      break;
-    case 11:
-      giovao = "18:15";
-      break;
-    case 12:
-      giovao = "19:10";
-      break;
-    case 13:
-      giovao = "20:05";
-      break;
-    default:
-      console.error("Invalid start period");
+  if (typeof tiethoc !== 'string' || !tiethoc.includes(' --> ')) {
+      return undefined;
   }
 
-  switch (ra) {
-    case 1:
-      giora = "7:35";
-      break;
-    case 2:
-      giora = "8:30";
-      break;
-    case 3:
-      giora = "9:30";
-      break;
-    case 4:
-      giora = "10:30";
-      break;
-    case 5:
-      giora = "11:25";
-      break;
-    case 6:
-      giora = "13:50";
-      break;
-    case 7:
-      giora = "14:45";
-      break;
-    case 8:
-      giora = "15:45";
-      break;
-    case 9:
-      giora = "16:45";
-      break;
-    case 10:
-      giora = "17:40";
-      break;
-    case 11:
-      giora = "19:05";
-      break;
-    case 12:
-      giora = "20:00";
-      break;
-    case 13:
-      giora = "20:55";
-      break;
-    default:
-      console.error("Invalid end period");
-  }
+  const [vao, ra] = tiethoc.split(' --> ').map(str => parseInt(str, 10));
+  const gio_vao = [
+      '6:45',
+      '7:40',
+      '8:40',
+      '9:40',
+      '10:35',
+      '13:00',
+      '13:55',
+      '14:55',
+      '15:55',
+      '16:50',
+      '18:15',
+      '19:10',
+      '20:05'
+  ][vao - 1];
 
-  return {
-    GioVao: giovao,
-    GioRa: giora
-  };
+  const gio_ra = [
+      '7:35',
+      '8:30',
+      '9:30',
+      '10:30',
+      '11:25',
+      '13:50',
+      '14:45',
+      '15:45',
+      '16:45',
+      '17:40',
+      '19:05',
+      '20:00',
+      '20:55'
+  ][ra - 1];
+
+  return `${gio_vao} --> ${gio_ra}`;
 }
+
 
 function lichtuan(lich: string) {
   if (typeof lich !== 'string') {
@@ -147,16 +85,15 @@ function thutrongtuan(thu: string, batdau: string, ketthuc: string) {
   if (typeof thu !== 'string' || typeof batdau !== 'string' || typeof ketthuc !== 'string') {
     return "Invalid input";
   }
-  //console.log(thu, batdau, ketthuc);
-  // Convert batdau and ketthuc to Date objects
+
   let startDate = new Date(batdau);
   let endDate = new Date(ketthuc);
-  // Validate date parsing
+
   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
     return "Invalid date format";
   }
 
-  // Validate thu input
+
   let thuIndex = parseInt(thu, 10); // Convert thu to integer
   if (thuIndex < 2 || thuIndex > 8 || isNaN(thuIndex)) {
     return "Invalid weekday number";
@@ -170,7 +107,7 @@ function thutrongtuan(thu: string, batdau: string, ketthuc: string) {
       let day = currentDate.getDate().toString().padStart(2, '0');
       let month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
       let year = currentDate.getFullYear().toString();
-      return `${year}-${month}-${day}`;
+      return `${day}/${month}/${year}`;
     }
     currentDate.setDate(currentDate.getDate() + 1);
   }
@@ -178,7 +115,13 @@ function thutrongtuan(thu: string, batdau: string, ketthuc: string) {
   return "No such weekday found in the range";
 }
 
+function dateToString(date: Date): string {
+  const day = String(date.getDate()).padStart(2, "0"); // Đảm bảo ngày luôn có 2 chữ số
+  const month = String(date.getMonth() + 1).padStart(2, "0"); // Đảm bảo tháng luôn có 2 chữ số
+  const year = date.getFullYear(); // Lấy năm
 
+  return `${day}/${month}/${year}`; // Trả về chuỗi định dạng dd/mm/yyyy
+}
 export const GET = async (request: Request) => {
   // Lấy thông tin tài khoản từ URLSearchParams
   try {
@@ -229,39 +172,53 @@ export const GET = async (request: Request) => {
     const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
     const LichHoc = [];
     const TuanData = [];
+    const testdata: any = {};
     let Tuan = 0;
     let ngayhoct = {
       Tu: "",
       Den: ""
     }
+    let endDate = "01/01/1970";
+    // console.log(new Date())
     for (let i = 10; i < jsonData.length; i++) {
       const STT = parseInt(JSON.parse(JSON.stringify(jsonData[i]))[0]);
-      const hocphan = JSON.parse(JSON.stringify(jsonData[i]))[1];
-      const MaHP = hocphan.match(/\((.*?)\)/)[1];
-      const TenHP = hocphan.replace(/\((.*?)\)/, "").trim();
+      const TenHP = JSON.parse(JSON.stringify(jsonData[i]))[1];
       const GiangVien = JSON.parse(JSON.stringify(jsonData[i]))[2];
       const ThuNgay = JSON.parse(JSON.stringify(jsonData[i]))[3];
       const tg = JSON.parse(JSON.stringify(jsonData[i]))[4];
       const LetTime = tinhtoan(tg);
       let ThoiGian = "";
-      const TTuan = hocphan.match(/\((.*?)\)/)[1];
+      const TTuan = TenHP.match(/\((.*?)\)/)[1];
 
       if (typeof LetTime !== 'undefined') {
-        ThoiGian = `${LetTime.GioVao} - ${LetTime.GioRa}`;
+        ThoiGian = LetTime;
         const DiaDiem = JSON.parse(JSON.stringify(jsonData[i]))[5];
         const Ngay = thutrongtuan(ThuNgay, parseDate(ngayhoct.Tu), parseDate(ngayhoct.Den));
         const gv = GiangVien.split('\n');
-        LichHoc.push({
-          STT,
-          Tuan,
-          Ngay,
-          ThoiGian,
-          TenHP,
-          MaHP,
-          GiangVien: gv[0],
-          Meet: gv[1],
-          DiaDiem
-        });
+        endDate = dateToString(new Date(ngayhoct.Den));
+        if(!testdata[Ngay]){
+          testdata[Ngay] = [];
+          testdata[Ngay].push({
+            STT,
+            // Tuan,
+            Ngay,
+            ThoiGian,
+            TenHP,
+            GiangVien: gv[0],
+            Meet: gv[1],
+            DiaDiem
+          })
+        }
+        // LichHoc.push({
+        //   STT,
+        //   // Tuan,
+        //   Ngay,
+        //   ThoiGian,
+        //   TenHP,
+        //   GiangVien: gv[0],
+        //   Meet: gv[1],
+        //   DiaDiem
+        // });
       } else {
         Tuan++;
         const STT = 0;
@@ -284,8 +241,9 @@ export const GET = async (request: Request) => {
       JSON.stringify({
         HocKi: hocki,
         NamHoc: namhoc,
-        lichhocdata: LichHoc,
-        TuanData
+        lichhocdata: testdata,
+        endDate
+        // TuanData
       }), {
       headers: {
         "content-type": "application/json",

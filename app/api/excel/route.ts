@@ -191,6 +191,13 @@ export const GET = async (request: Request) => {
       responseType: 'arraybuffer'
     });
     const data = new Uint8Array(exportResponse.data);
+    if(data!=null){
+        return new Response(data,{
+          headers: {
+            "content-type": "application/x-www-form-urlencoded",
+          },
+        });
+    }
     const workbook = XLSX.read(data, { type: 'array' });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
@@ -221,7 +228,7 @@ export const GET = async (request: Request) => {
         const gv = GiangVien.split('\n');
         LichHoc.push({
           STT,
-          Tuan,
+          // Tuan,
           Ngay,
           TenHP,
           MaHP,
@@ -250,7 +257,7 @@ export const GET = async (request: Request) => {
         NamHoc: namhoc,
         lastUpdateTime: toDateString(lastUpdateTime),
         SinhVien: sinhvien,
-        TuanData: TuanData,
+        // TuanData: TuanData,
         LichHoc: LichHoc
       }), {
       headers: {
