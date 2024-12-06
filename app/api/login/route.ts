@@ -25,6 +25,15 @@ const responseHeaders = {
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS", // Allow methods
   "Access-Control-Allow-Headers": "Content-Type, Authorization", // Allow specific headers
 };
+export const OPTIONS = async (request: Request) => {
+  return new Response(null, {
+    headers: {
+      "Access-Control-Allow-Origin": "*", // Hoặc domain của bạn
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
+};
 
 export const POST = async (request: Request) => {
   try {
