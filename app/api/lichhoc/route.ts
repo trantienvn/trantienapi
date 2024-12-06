@@ -16,7 +16,21 @@ const client = wrapper(
     },
   })
 );
-
+const responseHeaders = {
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Origin": "*", // Allow all origins
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS", // Allow methods
+  "Access-Control-Allow-Headers": "Content-Type, Authorization", // Allow specific headers
+};
+export const OPTIONS = async (request: Request) => {
+  return new Response(null, {
+    headers: {
+      "Access-Control-Allow-Origin": "*", // Hoặc domain của bạn
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
+};
 const urlLogin = "http://220.231.119.171/kcntt/login.aspx";
 
 function tinhtoan(tiethoc: string) {
@@ -245,9 +259,7 @@ export const GET = async (request: Request) => {
         endDate
         // TuanData
       }), {
-      headers: {
-        "content-type": "application/json",
-      },
+      headers: responseHeaders
     }
     );
 
@@ -257,7 +269,7 @@ export const GET = async (request: Request) => {
         error: true,
         message: e,
 
-      })
+      }),{headers: responseHeaders}
     );
   }
 };
