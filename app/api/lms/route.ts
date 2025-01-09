@@ -1,6 +1,5 @@
 import axios from "axios";
 
-
 export const GET = async (req: Request): Promise<Response> => {
   const url = new URL(req.url);
   const requrl = url.searchParams.get("url");
@@ -8,7 +7,7 @@ export const GET = async (req: Request): Promise<Response> => {
 
   if (!requrl || !token) {
     return new Response(
-      JSON.stringify({ error: "Missing required parameters: id or token" }),
+      JSON.stringify({ error: "Missing required parameters: url or token" }),
       {
         status: 400,
         headers: { "Content-Type": "application/json" },
@@ -16,10 +15,9 @@ export const GET = async (req: Request): Promise<Response> => {
     );
   }
 
-
   try {
-
-    const apiResponse = await axios.post(requrl, {}, {
+    // Sử dụng axios.get thay vì axios.post và truyền dữ liệu qua tham số truy vấn
+    const apiResponse = await axios.get(requrl, {
       headers: {
         Authorization: "Bearer " + token,
         Accept: "application/json, text/plain, */*",
@@ -37,12 +35,20 @@ export const GET = async (req: Request): Promise<Response> => {
 
     const data = apiResponse.data;
     return new Response(JSON.stringify(data), {
-        headers: { "Content-Type": "application/json" },
-      });
+      headers: { "Content-Type": "application/json" },
+    });
     
-  } catch (error) {
+  } catch (error: any) {
+    // Xử lý lỗi cụ thể
+    const errorDetails = error.response
+      ? {
+          status: error.response.status,
+          message: error.response.data || error.message,
+        }
+      : { message: error.message };
+
     return new Response(
-      JSON.stringify({ error: "Internal server error", details: error }),
+      JSON.stringify({ error: "Internal server error", details: errorDetails }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
