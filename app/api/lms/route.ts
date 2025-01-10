@@ -37,14 +37,14 @@ export const GET = async (req: Request): Promise<Response> => {
     return new Response(JSON.stringify(data), {
       headers: { "Content-Type": "application/json" },
     });
-    
+
   } catch (error: any) {
     // Xử lý lỗi cụ thể
     const errorDetails = error.response
       ? {
-          status: error.response.status,
-          message: error.response.data || error.message,
-        }
+        status: error.response.status,
+        message: error.response.data || error.message,
+      }
       : { message: error.message };
 
     return new Response(
@@ -60,9 +60,10 @@ export const GET = async (req: Request): Promise<Response> => {
 export const POST = async (req: Request): Promise<Response> => {
   try {
     const body = await req.json(); // Lấy dữ liệu từ thân yêu cầu
-    const { url, token, data } = body;
-
-    if (!url || !data) {
+    const url = new URL(req.url);
+    const requrl = url.searchParams.get("url");
+    const token = url.searchParams.get("token");
+    if (!requrl || !body) {
       return new Response(
         JSON.stringify({ error: "Missing required parameters: url, token, or data" }),
         {
@@ -74,8 +75,8 @@ export const POST = async (req: Request): Promise<Response> => {
 
     // Sử dụng axios.post để gửi dữ liệu
     const apiResponse = await axios.post(
-      url,
-      data,
+      requrl,
+      body,
       {
         headers: {
           Authorization: "Bearer " + token,
@@ -97,14 +98,14 @@ export const POST = async (req: Request): Promise<Response> => {
     return new Response(JSON.stringify(responseData), {
       headers: { "Content-Type": "application/json" },
     });
-    
+
   } catch (error: any) {
     // Xử lý lỗi cụ thể
     const errorDetails = error.response
       ? {
-          status: error.response.status,
-          message: error.response.data || error.message,
-        }
+        status: error.response.status,
+        message: error.response.data || error.message,
+      }
       : { message: error.message };
 
     return new Response(
