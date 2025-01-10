@@ -62,7 +62,7 @@ export const POST = async (req: Request): Promise<Response> => {
     const body = await req.json(); // Lấy dữ liệu từ thân yêu cầu
     const { url, token, data } = body;
 
-    if (!url || !token || !data) {
+    if (!url || !data) {
       return new Response(
         JSON.stringify({ error: "Missing required parameters: url, token, or data" }),
         {
