@@ -1,4 +1,20 @@
 import axios from "axios";
+import crypto from "crypto";
+
+// Hàm định dạng thời gian (thay thế $o().format)
+const formatDate = (date: Date): string => {
+  return date.toISOString(); // Định dạng ISO 8601
+};
+
+// Hàm tạo chữ ký
+const generateSignature = (method: string, body: any, timestamp: Date): string => {
+  const X_APP_ID = "7040BD38-0D02-4CBE-8B0E-F4115C348003"; // Giá trị cố định
+  const bodyString = ["POST", "PUT"].includes(method.toUpperCase()) ? JSON.stringify(body ?? {}) : "";
+  const formattedDate = formatDate(timestamp);
+  const signatureBase = bodyString + X_APP_ID + formattedDate;
+  const signature = crypto.createHash("sha256").update(signatureBase).digest("hex");
+  return signature.toUpperCase();
+};
 
 export const GET = async (req: Request): Promise<Response> => {
   const url = new URL(req.url);
@@ -16,7 +32,9 @@ export const GET = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Sử dụng axios.get thay vì axios.post và truyền dữ liệu qua tham số truy vấn
+    const timestamp = new Date();
+    const signature = generateSignature("GET", null, timestamp);
+
     const apiResponse = await axios.get(requrl, {
       headers: {
         Authorization: "Bearer " + token,
@@ -30,7 +48,7 @@ export const GET = async (req: Request): Promise<Response> => {
         Referer: "https://lms.ictu.edu.vn/",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
         "X-App-Id": "7040BD38-0D02-4CBE-8B0E-F4115C348003",
-        "x-request-signature": "14A07154",
+        "x-request-signature": signature,
       },
     });
 
@@ -40,7 +58,6 @@ export const GET = async (req: Request): Promise<Response> => {
     });
 
   } catch (error: any) {
-    // Xử lý lỗi cụ thể
     const errorDetails = error.response
       ? {
         status: error.response.status,
@@ -60,7 +77,7 @@ export const GET = async (req: Request): Promise<Response> => {
 
 export const POST = async (req: Request): Promise<Response> => {
   try {
-    const body = await req.json(); // Lấy dữ liệu từ thân yêu cầu
+    const body = await req.json();
     const url = new URL(req.url);
     const requrl = url.searchParams.get("url");
     const token = url.searchParams.get("token");
@@ -74,7 +91,9 @@ export const POST = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Sử dụng axios.post để gửi dữ liệu
+    const timestamp = new Date();
+    const signature = generateSignature("POST", body, timestamp);
+
     const apiResponse = await axios.post(
       requrl,
       body,
@@ -91,6 +110,7 @@ export const POST = async (req: Request): Promise<Response> => {
           Referer: "https://lms.ictu.edu.vn/",
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
           "X-App-Id": "7040BD38-0D02-4CBE-8B0E-F4115C348003",
+          "x-request-signature": signature,
         },
       }
     );
@@ -101,7 +121,6 @@ export const POST = async (req: Request): Promise<Response> => {
     });
 
   } catch (error: any) {
-    // Xử lý lỗi cụ thể
     const errorDetails = error.response
       ? {
         status: error.response.status,
