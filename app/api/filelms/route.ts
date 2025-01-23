@@ -36,6 +36,7 @@ export const GET = async (req: Request): Promise<Response> => {
         Origin: "https://lms.ictu.edu.vn",
         Referer: "https://lms.ictu.edu.vn/",
         "X-App-Id": "7040BD38-0D02-4CBE-8B0E-F4115C348003",
+        "x-request-signature": "14A07154",
       },
     });
 
