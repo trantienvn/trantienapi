@@ -30,6 +30,7 @@ export const GET = async (req: Request): Promise<Response> => {
         Referer: "https://lms.ictu.edu.vn/",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
         "X-App-Id": "7040BD38-0D02-4CBE-8B0E-F4115C348003",
+        "x-request-signature": "14A07154",
       },
     });
 
