@@ -38,7 +38,7 @@ const generateSignature = (method: string, body: any, timestamp: Date): string =
   const bodyString = ["POST", "PUT"].includes(method.toUpperCase()) ? JSON.stringify(body ?? {}) : "";
   const formattedDate = formatDate(timestamp);
   const signatureBase = bodyString + X_APP_ID + formattedDate;
-  console.log(calculateCRC32('7040BD38-0D02-4CBE-8B0E-F4115C3480032025-01-23 12:44:00'));
+  // console.log(calculateCRC32('7040BD38-0D02-4CBE-8B0E-F4115C3480032025-01-23 12:44:00'));
   return calculateCRC32(signatureBase); // Lấy 8 ký tự đầu tiên
 };
 
