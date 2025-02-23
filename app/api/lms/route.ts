@@ -54,8 +54,12 @@ export const GET = async (req: Request): Promise<Response> => {
       JSON.stringify({ error: "Missing required parameters: url or token" }),
       {
         status: 400,
-        headers: { "Content-Type": "application/json" },
-      }
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*", // Cho phép từ mọi web
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", // Cho phép các phương thức
+          "Access-Control-Allow-Headers": "Content-Type, Authorization" // Cho phép các header đặc biệt
+        }      }
     );
   }
 
@@ -74,7 +78,7 @@ export const GET = async (req: Request): Promise<Response> => {
         "Content-Type": "application/json",
         Origin: "https://lms.ictu.edu.vn",
         Referer: "https://lms.ictu.edu.vn/",
-        "User-Agent": navigator.userAgent,
+        "User-Agent": req.headers['user-agent'] || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
         "X-App-Id": "7040BD38-0D02-4CBE-8B0E-F4115C348003",
         "x-request-signature": signature,
       },
@@ -82,8 +86,12 @@ export const GET = async (req: Request): Promise<Response> => {
 
     const data = apiResponse.data;
     return new Response(JSON.stringify(data), {
-      headers: { "Content-Type": "application/json" },
-    });
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*", // Cho phép từ mọi web
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", // Cho phép các phương thức
+        "Access-Control-Allow-Headers": "Content-Type, Authorization" // Cho phép các header đặc biệt
+      }    });
 
   } catch (error: any) {
     const errorDetails = error.response
@@ -97,8 +105,12 @@ export const GET = async (req: Request): Promise<Response> => {
       JSON.stringify({ error: "Internal server error", details: errorDetails }),
       {
         status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*", // Cho phép từ mọi web
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", // Cho phép các phương thức
+          "Access-Control-Allow-Headers": "Content-Type, Authorization" // Cho phép các header đặc biệt
+        }      }
     );
   }
 };
@@ -114,8 +126,12 @@ export const POST = async (req: Request): Promise<Response> => {
         JSON.stringify({ error: "Missing required parameters: url, token, or data" }),
         {
           status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*", // Cho phép từ mọi web
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", // Cho phép các phương thức
+            "Access-Control-Allow-Headers": "Content-Type, Authorization" // Cho phép các header đặc biệt
+          }        }
       );
     }
 
@@ -136,7 +152,7 @@ export const POST = async (req: Request): Promise<Response> => {
           "Content-Type": "application/json",
           Origin: "https://lms.ictu.edu.vn",
           Referer: "https://lms.ictu.edu.vn/",
-          "User-Agent": navigator.userAgent,
+          "User-Agent": req.headers['user-agent'] || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
           "X-App-Id": "7040BD38-0D02-4CBE-8B0E-F4115C348003",
           "x-request-signature": signature,
         },
@@ -145,8 +161,12 @@ export const POST = async (req: Request): Promise<Response> => {
 
     const responseData = apiResponse.data;
     return new Response(JSON.stringify(responseData), {
-      headers: { "Content-Type": "application/json" },
-    });
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*", // Cho phép từ mọi web
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", // Cho phép các phương thức
+        "Access-Control-Allow-Headers": "Content-Type, Authorization" // Cho phép các header đặc biệt
+      }    });
 
   } catch (error: any) {
     const errorDetails = error.response
@@ -160,8 +180,12 @@ export const POST = async (req: Request): Promise<Response> => {
       JSON.stringify({ error: "Internal server error", details: errorDetails }),
       {
         status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*", // Cho phép từ mọi web
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", // Cho phép các phương thức
+          "Access-Control-Allow-Headers": "Content-Type, Authorization" // Cho phép các header đặc biệt
+        }      }
     );
   }
 };

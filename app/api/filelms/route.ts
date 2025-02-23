@@ -51,7 +51,12 @@ export const GET = async (req: Request): Promise<Response> => {
       JSON.stringify({ error: "Missing required parameters: id or token" }),
       {
         status: 400,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*", // Cho phép từ mọi web
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", // Cho phép các phương thức
+          "Access-Control-Allow-Headers": "Content-Type, Authorization" // Cho phép các header đặc biệt
+        }
       }
     );
   }
@@ -83,15 +88,26 @@ export const GET = async (req: Request): Promise<Response> => {
 
     const data = apiResponse.data;
     return new Response(JSON.stringify(data), {
-        headers: { "Content-Type": "application/json" },
-      });
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*", // Cho phép từ mọi web
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", // Cho phép các phương thức
+        "Access-Control-Allow-Headers": "Content-Type, Authorization" // Cho phép các header đặc biệt
+      }
+    });
+    
     
   } catch (error) {
     return new Response(
       JSON.stringify({ error: "Internal server error", details: error }),
       {
         status: 500,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*", // Cho phép từ mọi web
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", // Cho phép các phương thức
+          "Access-Control-Allow-Headers": "Content-Type, Authorization" // Cho phép các header đặc biệt
+        },
       }
     );
   }
