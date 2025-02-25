@@ -13,22 +13,25 @@ const formatDate = (date: Date): string => {
 // Hàm CRC32 (tương tự Up trong mã của bạn)
 const calculateCRC32 = (input: string): string => {
   const table = (() => {
-    let crcTable = [];
-    for (let i = 0; i < 256; i++) {
-      let c = i;
-      for (let j = 0; j < 8; j++) {
-        c = c & 1 ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    let c: number;
+    const crcTable: number[] = [];
+    for (let n = 0; n < 256; n++) {
+      c = n;
+      for (let k = 0; k < 8; k++) {
+        c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
       }
-      crcTable.push(c);
+      crcTable[n] = c;
     }
     return crcTable;
   })();
 
   let crc = 0 ^ (-1);
+
   for (let i = 0; i < input.length; i++) {
     crc = (crc >>> 8) ^ table[(crc ^ input.charCodeAt(i)) & 0xFF];
   }
-  return ((crc ^ (-1)) >>> 0).toString(16).toUpperCase().padStart(8, "0");
+
+  return ((crc ^ (-1)) >>> 0).toString(16).toUpperCase();
 };
 
 // Hàm tạo chữ ký
@@ -64,7 +67,7 @@ export const GET = async (req: Request): Promise<Response> => {
 
   try {
     // Kiểm tra nếu ảnh đã tồn tại trên server
-    
+
 
     // Nếu ảnh không tồn tại, gửi yêu cầu đến API
     const apiUrl = `https://apps.ictu.edu.vn:9087/ionline/api/aws/file/${imageId}`;
@@ -95,8 +98,8 @@ export const GET = async (req: Request): Promise<Response> => {
         "Access-Control-Allow-Headers": "Content-Type, Authorization" // Cho phép các header đặc biệt
       }
     });
-    
-    
+
+
   } catch (error) {
     return new Response(
       JSON.stringify({ error: "Internal server error", details: error }),
