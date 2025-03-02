@@ -133,14 +133,13 @@ app.post("/proxy", async (req, res) => {
     const { url, token } = req.query;
     const body = req.body;
 
-    if (!url || !body) {
-        return res.status(400).json({ error: "Missing required parameters: url, token, or body" });
-    }
-
     try {
         const timestamp = new Date();
         const signature = generateXRequestSignature("POST", body, timestamp);
-
+        console.log("Generated signature:", signature);
+        console.log("Url:", url);
+        console.log("Token:", token);
+        console.log("Body:", body);
         const apiResponse = await axios.post(url, body, {
             headers: {
                 Authorization: "Bearer " + token,
