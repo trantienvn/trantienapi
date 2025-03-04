@@ -167,7 +167,27 @@ app.post("/proxy", async (req, res) => {
         });
     }
 });
+// Route xử lý GET request
+app.get("/api/lms", (req, res) => {
+    const { url } = req.query;
 
+    if (!url) {
+        return res.status(400).json({ error: "Missing required parameter: url" });
+    }
+    
+    res.redirect(url);
+});
+
+// Route xử lý POST request
+app.post("/api/lms", (req, res) => {
+    const { url } = req.query;
+
+    if (!url) {
+        return res.status(400).json({ error: "Missing required parameter: url" });
+    }
+    
+    res.redirect(307, url); // Sử dụng mã trạng thái 307 để duy trì phương thức POST
+});
 // Khởi động server
 app.listen(PORT, () => {
     console.log(`Server đang chạy tại http://localhost:${PORT}`);
