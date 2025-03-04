@@ -179,8 +179,9 @@ app.get("/files", async (req, res) => {
         }
         
         const url = `https://apps.ictu.edu.vn:9087/ionline/api/aws/file/${imageId}`;
+        const timestamp = new Date();
         
-        const signature = generateXRequestSignature("POST", {});
+        const signature = generateXRequestSignature("POST", {}, timestamp);
         const headers = {
             "Accept": "application/json, text/plain, */*",
             "Accept-Language": "vi,fr-FR;q=0.9,fr;q=0.8,en;q=0.7",
