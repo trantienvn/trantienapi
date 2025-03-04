@@ -131,16 +131,14 @@ app.get("/proxy", async (req, res) => {
 // Route xử lý POST request
 app.post("/proxy", async (req, res) => {
     console.log("Received request with:", req.query, req.body);
-    const { url, token } = req.query;
-    const body = req.body;
-
+    const { url, token, data } = req.body;
     try {
         const timestamp = new Date();
         const signature = generateXRequestSignature("POST", body, timestamp);
         console.log("Generated signature:", signature);
         console.log("Url:", url);
         console.log("Token:", token);
-        console.log("Body:", body);
+        console.log("Data:", data);
         const apiResponse = await axios.post(url, body, {
             headers: {
                 Authorization: "Bearer " + token,
