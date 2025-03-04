@@ -182,8 +182,7 @@ app.get("/files", async (req, res) => {
         const timestamp = new Date();
         
         const signature = generateXRequestSignature("POST", {}, timestamp);
-        const data = {};
-        const response = await axios.post(url, data, {
+        const response = await axios.post(url, {}, {
             headers: {
                 Authorization: "Bearer " + token,
                 Accept: "application/json, text/plain, */*",
