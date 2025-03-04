@@ -165,6 +165,50 @@ app.post("/proxy", async (req, res) => {
         });
     }
 });
+app.get("/files", async (req, res) => {
+    try {
+        const imageId = req.query.id;
+        const token = req.query.token; // Lấy token từ query string
+        
+        if (!imageId) {
+            return res.status(400).json({ error: "Missing 'id' parameter" });
+        }
+        
+        if (!token) {
+            return res.status(401).json({ error: "Unauthorized: Missing access token" });
+        }
+        
+        const url = `https://apps.ictu.edu.vn:9087/ionline/api/aws/file/${imageId}`;
+        
+        const signature = generateXRequestSignature("POST", {});
+        const headers = {
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "vi,fr-FR;q=0.9,fr;q=0.8,en;q=0.7",
+            "Authorization": `Bearer ${token}`,
+            "Cache-Control": "no-cache",
+            "Content-Type": "application/json",
+            "Pragma": "no-cache",
+            "X-App-Id": X_APP_ID,
+            "X-Request-Signature": signature,
+        };
+
+        const response = await fetch(url, {
+            method: "POST",
+            headers,
+            body: "{}",
+        });
+
+        if (!response.ok) {
+            const errorResponse = await response.json();
+            return res.status(response.status).json({ error: "HTTP request failed", details: errorResponse });
+        }
+
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: "Internal Server Error", message: error.message });
+    }
+});
 // Route xử lý GET request
 app.get("/api/lms", (req, res) => {
     const { url } = req.query;
