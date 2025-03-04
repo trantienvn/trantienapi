@@ -182,21 +182,22 @@ app.get("/files", async (req, res) => {
         const timestamp = new Date();
         
         const signature = generateXRequestSignature("POST", {}, timestamp);
-        const headers = {
-            "Accept": "application/json, text/plain, */*",
-            "Accept-Language": "vi,fr-FR;q=0.9,fr;q=0.8,en;q=0.7",
-            "Authorization": `Bearer ${token}`,
-            "Cache-Control": "no-cache",
-            "Content-Type": "application/json",
-            "Pragma": "no-cache",
-            "X-App-Id": X_APP_ID,
-            "X-Request-Signature": signature,
-        };
-
-        const response = await fetch(url, {
-            method: "POST",
-            headers,
-            body: "{}",
+        const data = {};
+        const response = await axios.post(url, data, {
+            headers: {
+                Authorization: "Bearer " + token,
+                Accept: "application/json, text/plain, */*",
+                "Accept-Encoding": "gzip, deflate, br, zstd",
+                "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
+                "Cache-Control": "no-cache",
+                Connection: "keep-alive",
+                "Content-Type": "application/json",
+                Origin: "https://lms.ictu.edu.vn",
+                Referer: "https://lms.ictu.edu.vn/",
+                "User-Agent": req.headers["user-agent"] || "Mozilla/5.0",
+                "X-App-Id": X_APP_ID,
+                "x-request-signature": signature,
+            },
         });
 
         if (!response.ok) {
