@@ -139,7 +139,7 @@ app.post("/proxy", async (req, res) => {
         console.log("Url:", url);
         console.log("Token:", token);
         console.log("Data:", data);
-        const apiResponse = await axios.post(url, body, {
+        const apiResponse = await axios.post(url, data, {
             headers: {
                 Authorization: "Bearer " + token,
                 Accept: "application/json, text/plain, */*",
