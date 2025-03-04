@@ -123,6 +123,7 @@ app.get("/proxy", async (req, res) => {
         res.status(500).json({
             error: "Internal server error",
             details: error.response ? error.response.data : error.message,
+            data: error,
         });
     }
 });
@@ -162,6 +163,7 @@ app.post("/proxy", async (req, res) => {
         res.status(500).json({
             error: "Internal server error",
             details: error.response ? error.response.data : error.message,
+            data: error,
         });
     }
 });
