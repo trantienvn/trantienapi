@@ -134,7 +134,7 @@ app.post("/proxy", async (req, res) => {
     const { url, token, data } = req.body;
     try {
         const timestamp = new Date();
-        const signature = generateXRequestSignature("POST", body, timestamp);
+        const signature = generateXRequestSignature("POST", data, timestamp);
         console.log("Generated signature:", signature);
         console.log("Url:", url);
         console.log("Token:", token);
