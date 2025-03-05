@@ -165,49 +165,51 @@ app.post("/proxy", async (req, res) => {
         });
     }
 });
+const axios = require("axios");
+const express = require("express");
+const app = express();
+
 app.get("/files", async (req, res) => {
     try {
         const imageId = req.query.id;
-        const token = req.query.token; // Lấy token từ query string
-        
+        const token = req.query.token;
+
         if (!imageId) {
             return res.status(400).json({ error: "Missing 'id' parameter" });
         }
-        
+
         if (!token) {
             return res.status(401).json({ error: "Unauthorized: Missing access token" });
         }
-        
+
         const url = `https://apps.ictu.edu.vn:9087/ionline/api/aws/file/${imageId}`;
-        const timestamp = new Date();
-        
-        const signature = generateXRequestSignature("POST", {}, timestamp);
+
         const response = await axios.post(url, {}, {
             headers: {
-                Authorization: "Bearer " + token,
-                Accept: "application/json, text/plain, */*",
-                "Accept-Encoding": "gzip, deflate, br, zstd",
-                "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
-                "Cache-Control": "no-cache",
-                Connection: "keep-alive",
-                "Content-Type": "application/json",
-                Origin: "https://lms.ictu.edu.vn",
-                Referer: "https://lms.ictu.edu.vn/",
-                "User-Agent": req.headers["user-agent"] || "Mozilla/5.0",
-                "X-App-Id": X_APP_ID,
-                "x-request-signature": signature,
+                "Authorization": `Bearer ${token}`,
             },
+            responseType: "stream", // Giữ nguyên dữ liệu phản hồi (nếu là file)
         });
 
-        if (!response.ok) {
-            const errorResponse = await response.json();
-            return res.status(response.status).json({ error: "HTTP request failed", details: errorResponse });
-        }
+        // Copy headers từ API gốc sang response client
+        Object.keys(response.headers).forEach((key) => {
+            res.setHeader(key, response.headers[key]);
+        });
 
-        const data = await response.json();
-        res.json(data);
+        // Trả về status code gốc từ API
+        res.status(response.status);
+
+        // Nếu response là dạng stream (file), truyền trực tiếp cho client
+        response.data.pipe(res);
     } catch (error) {
-        res.status(500).json({ error: "Internal Server Error", message: error.message });
+        if (error.response) {
+            res.status(error.response.status).json({
+                error: "HTTP request failed",
+                details: error.response.data,
+            });
+        } else {
+            res.status(500).json({ error: "Internal Server Error", message: error.message });
+        }
     }
 });
 // Route xử lý GET request
@@ -217,7 +219,7 @@ app.get("/api/lms", (req, res) => {
     if (!url) {
         return res.status(400).json({ error: "Missing required parameter: url" });
     }
-    
+
     res.redirect(url);
 });
 
@@ -228,7 +230,7 @@ app.post("/api/lms", (req, res) => {
     if (!url) {
         return res.status(400).json({ error: "Missing required parameter: url" });
     }
-    
+
     res.redirect(307, url); // Sử dụng mã trạng thái 307 để duy trì phương thức POST
 });
 // Khởi động server
