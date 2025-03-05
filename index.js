@@ -174,11 +174,11 @@ app.get("/image", async (req, res) => {
     try {
         const apiUrl = `https://apps.ictu.edu.vn:9087/ionline/api/aws/file/${imageId}`;
         const timestamp = new Date();
-        const signature = generateXRequestSignature("GET", null, timestamp);
+        const signature = generateXRequestSignature("POST", {}, timestamp);
 
         const apiResponse = await axios.post(apiUrl, {}, {
             headers: {
-                Authorization: token,
+                Authorization: `Bearer ${token}`,
                 Accept: "application/json, text/plain, */*",
                 "Accept-Encoding": "gzip, deflate, br, zstd",
                 "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7,fr-FR;q=0.6,fr;q=0.5",
@@ -194,7 +194,7 @@ app.get("/image", async (req, res) => {
 
         return res.status(200).json(apiResponse.data);
     } catch (error) {
-        return res.status(500).json({ error: "Internal server error", details: error.message });
+        return res.status(500).json({ error: "Internal server error", details: error });
     }
 });
 
