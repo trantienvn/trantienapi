@@ -220,6 +220,9 @@ app.post("/api/lms", (req, res) => {
 
     res.redirect(307, url); // Sử dụng mã trạng thái 307 để duy trì phương thức POST
 });
+app.get("/", (req, res) => {
+        return res.status(400).send("Chào mừng đến với TranTienAPI lấy api từ lms");
+});
 // Khởi động server
 app.listen(PORT, () => {
     console.log(`Server đang chạy tại http://localhost:${PORT}`);
