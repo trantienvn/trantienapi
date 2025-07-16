@@ -2,7 +2,11 @@ const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-
+const { wrapper } = require('axios-cookiejar-support');
+const { CookieJar } = require('tough-cookie');
+const { createHash } = require('crypto');
+const { JSDOM } = require('jsdom');
+const XLSX = require('xlsx');
 const app = express();
 const PORT = 3000;
 
@@ -78,6 +82,208 @@ function generateXRequestSignature(method, body, dateObj) {
 }
 
 
+
+const jar = new CookieJar();
+const client = wrapper(axios.create({
+  jar,
+  timeout: 30000,
+  headers: {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  },
+}));
+
+const responseHeaders = {
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Credentials": "true",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+const URLS = {
+  login: "http://dangkytinchi.ictu.edu.vn/kcntt/login.aspx",
+  home: "http://dangkytinchi.ictu.edu.vn/kcntt/Home.aspx",
+  studentTimeTable: "http://dangkytinchi.ictu.edu.vn/kcntt/Reports/Form/StudentTimeTable.aspx",
+};
+
+const cache = new Map();
+
+function parseDate(dateString) {
+  const [day, month, year] = dateString.split('/');
+  return `${year}-${month}-${day}`;
+}
+
+function dateToString(date) {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+function tinhtoan(tiethoc) {
+  if (!tiethoc || !tiethoc.includes(' --> ')) return undefined;
+
+  const [vao, ra] = tiethoc.split(' --> ').map(str => parseInt(str, 10));
+  const gio_vao = ['6:45', '7:40', '8:40', '9:40', '10:35', '13:00', '13:55', '14:55', '15:55', '16:50', '18:15', '19:10', '20:05'][vao - 1];
+  const gio_ra = ['7:35', '8:30', '9:30', '10:30', '11:25', '13:50', '14:45', '15:45', '16:45', '17:40', '19:05', '20:00', '20:55'][ra - 1];
+
+  return `${gio_vao} --> ${gio_ra}`;
+}
+
+function lichtuan(lich) {
+  if (typeof lich !== 'string') return { Tu: "1970-01-01", Den: "1970-01-01" };
+  const [tu, den] = lich.split(' đến ').map(parseDate);
+  return { Tu: tu, Den: den };
+}
+
+function thutrongtuan(thu, batdau, ketthuc) {
+  const startDate = new Date(batdau);
+  const endDate = new Date(ketthuc);
+  const thuIndex = parseInt(thu, 10);
+  let currentDate = new Date(startDate);
+
+  while (currentDate <= endDate) {
+    if (currentDate.getDay() === thuIndex - 1) {
+      return dateToString(currentDate);
+    }
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return "Không tìm thấy";
+}
+
+app.get('/lichhoc', async (req, res) => {
+  try {
+    const username = req.query.msv;
+    const password = req.query.pwd;
+    const semesterCode = req.query.hocki;
+
+    const cacheKey = `${username}-${password}`;
+    if (cache.has(cacheKey)) {
+      return res.set(responseHeaders).json(cache.get(cacheKey));
+    }
+
+    const loginPage = await client.get(URLS.login);
+    const dom = new JSDOM(loginPage.data);
+    const form = dom.window.document.getElementById("Form1");
+
+    const inputs = Array.from(form.elements).filter(
+      el => ['input', 'select', 'textarea'].includes(el.tagName.toLowerCase()) && el.name
+    );
+
+    const formData = new URLSearchParams();
+    for (const input of inputs) {
+      const name = input.name;
+      let value = input.value || '';
+      if (name === 'txtUserName') value = username;
+      if (name === 'txtPassword') value = createHash('md5').update(password).digest('hex');
+      formData.append(name, value);
+    }
+
+    const postLogin = await client.post(loginPage.request.res.responseUrl, formData);
+    const loginDOM = new JSDOM(postLogin.data);
+    const errorText = loginDOM.window.document.getElementById("lblErrorInfo");
+
+    if (errorText && errorText.textContent) {
+      return res.status(401).json({ error: true, message: errorText.textContent });
+    }
+
+    const homePage = await client.get(URLS.home);
+    const nameDOM = new JSDOM(homePage.data);
+    const nameText = nameDOM.window.document.getElementById("PageHeader1_lblUserFullName");
+    let HoTen = nameText ? nameText.textContent.split("(")[0].trim() : "Khách";
+
+    const lh = await client.get(URLS.studentTimeTable);
+    const domLichHoc = new JSDOM(lh.data);
+    const doc = domLichHoc.window.document;
+    const DOMurl = lh.request.res.responseUrl;
+
+    const hiddenInputs = doc.querySelectorAll('input[type="hidden"]');
+    const values = {};
+    hiddenInputs.forEach(i => values[i.name] = i.value);
+
+    const semesters = doc.getElementById("drpSemester");
+    let semester = semesters.value;
+    if (semesterCode){
+      for (let option of semesters.options) {
+        if(option.text.includes(semesterCode)) {
+          semester = option.value;
+          break;
+        }
+      }
+    }
+    const term = doc.getElementById("drpTerm").value;
+    const type = doc.getElementById("drpType").value;
+    const btnView = doc.getElementById("btnView").value;
+
+    const hockiSplit = doc.getElementById("drpSemester").selectedOptions[0].text.split("_");
+    const hocki = hockiSplit[0];
+    const namhoc = `${hockiSplit[1]} - ${hockiSplit[2]}`;
+
+    const exportRes = await client.post(DOMurl, new URLSearchParams({
+      ...values,
+      drpSemester: semester,
+      drpTerm: term,
+      drpType: type,
+      btnView
+    }), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      responseType: 'arraybuffer'
+    });
+
+    const data = new Uint8Array(exportRes.data);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+    const result = [];
+    let ngayhoct = { Tu: "", Den: "" };
+    let endDate = "1970-01-01";
+
+    for (let i = 10; i < rows.length; i++) {
+      const [STT, TenHP, GiangVien, ThuNgay, tiet, DiaDiem] = rows[i];
+      const ThoiGian = tinhtoan(tiet);
+      const TTuan = TenHP?.match(/\((.*?)\)/)?.[1];
+
+      if (!ThoiGian && TTuan) {
+        ngayhoct = lichtuan(TTuan);
+        continue;
+      }
+
+      const gv = GiangVien.split('\n');
+      const Meet = gv[1]?.startsWith('http') ? gv[1] : `https://${gv[1]}`;
+      const Ngay = thutrongtuan(ThuNgay, parseDate(ngayhoct.Tu), parseDate(ngayhoct.Den));
+      endDate = dateToString(new Date(ngayhoct.Den));
+
+    //   if (!result[Ngay]) result[Ngay] = [];
+
+      result.push({
+        STT,
+        Ngay,
+        ThoiGian,
+        TenHP,
+        GiangVien: gv[0],
+        Meet,
+        DiaDiem
+      });
+    }
+
+    const payload = {
+      HocKi: hocki,
+      NamHoc: namhoc,
+      HoTen,
+      MaSV: username.toUpperCase(),
+      lichhocdata: result,
+      endDate
+    };
+
+    cache.set(cacheKey, payload);
+    return res.set(responseHeaders).json(payload);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: true, message: e.message || 'Internal server error' });
+  }
+});
 
 
 // Middleware xử lý OPTIONS (CORS)
