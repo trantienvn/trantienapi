@@ -158,7 +158,7 @@ app.get('/lichhoc', async (req, res) => {
     const password = req.query.pwd;
     const semesterCode = req.query.hocki;
 
-    const cacheKey = `${username}-${password}`;
+    const cacheKey = `${username}-${password}-${semesterCode? semesterCode : 'default'}`;
     if (cache.has(cacheKey)) {
       return res.set(responseHeaders).json(cache.get(cacheKey));
     }
