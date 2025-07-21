@@ -262,7 +262,7 @@ app.get('/lichhoc', async (req, res) => {
       const gv = GiangVien.split('\n');
       const Meet = gv[1]?.startsWith('http') && gv[1].length > 0 ? gv[1] : `https://${gv[1]}`;
       const Ngay = thutrongtuan(ThuNgay, parseDate(ngayhoct.Tu), parseDate(ngayhoct.Den));
-      endDate = dateToString(new Date(ngayhoct.Den));
+      endDate = dateToString(new Date(parseDate(ngayhoct.Den)));
 
       //   if (!result[Ngay]) result[Ngay] = [];
       let tieth = '';
