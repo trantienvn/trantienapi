@@ -21,25 +21,25 @@ const X_APP_ID = "7040BD38-0D02-4CBE-8B0E-F4115C348003"; // Giá trị cố đ�
  * @returns {string} - Chữ ký CRC32 ở dạng hex viết hoa
  */
 function crc32(input) {
-    let table = (() => {
-        let c, crcTable = [];
-        for (let n = 0; n < 256; n++) {
-            c = n;
-            for (let k = 0; k < 8; k++) {
-                c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-            }
-            crcTable[n] = c;
-        }
-        return crcTable;
-    })();
-
-    let crc = 0 ^ (-1);
-
-    for (let i = 0; i < input.length; i++) {
-        crc = (crc >>> 8) ^ table[(crc ^ input.charCodeAt(i)) & 0xFF];
+  let table = (() => {
+    let c, crcTable = [];
+    for (let n = 0; n < 256; n++) {
+      c = n;
+      for (let k = 0; k < 8; k++) {
+        c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      }
+      crcTable[n] = c;
     }
+    return crcTable;
+  })();
 
-    return ((crc ^ (-1)) >>> 0).toString(16).toUpperCase();
+  let crc = 0 ^ (-1);
+
+  for (let i = 0; i < input.length; i++) {
+    crc = (crc >>> 8) ^ table[(crc ^ input.charCodeAt(i)) & 0xFF];
+  }
+
+  return ((crc ^ (-1)) >>> 0).toString(16).toUpperCase();
 }
 
 /**
@@ -48,14 +48,14 @@ function crc32(input) {
  * @returns {string} - Chuỗi định dạng YYYY-MM-DD HH:mm:00
  */
 function formatDateTime(dateObj) {
-    const date = new Date(dateObj.toLocaleString("en-US", { timeZone: "Asia/Bangkok" }));
-    const pad = (num) => num.toString().padStart(2, '0');
-    const year = date.getFullYear();
-    const month = pad(date.getMonth() + 1);
-    const day = pad(date.getDate());
-    const hours = pad(date.getHours());
-    const minutes = pad(date.getMinutes());
-    return `${year}-${month}-${day} ${hours}:${minutes}:00`;
+  const date = new Date(dateObj.toLocaleString("en-US", { timeZone: "Asia/Bangkok" }));
+  const pad = (num) => num.toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  return `${year}-${month}-${day} ${hours}:${minutes}:00`;
 }
 
 /**
@@ -66,19 +66,19 @@ function formatDateTime(dateObj) {
  * @returns {string} - x-request-signature
  */
 function generateXRequestSignature(method, body, dateObj) {
-    const X_APP_ID = '7040BD38-0D02-4CBE-8B0E-F4115C348003';
+  const X_APP_ID = '7040BD38-0D02-4CBE-8B0E-F4115C348003';
 
-    // Kiểm tra nếu là POST/PUT thì thêm body JSON, ngược lại bỏ qua
-    const bodyString = ["POST", "PUT"].includes(method.toUpperCase()) ? JSON.stringify(body || {}) : '';
+  // Kiểm tra nếu là POST/PUT thì thêm body JSON, ngược lại bỏ qua
+  const bodyString = ["POST", "PUT"].includes(method.toUpperCase()) ? JSON.stringify(body || {}) : '';
 
-    // Định dạng ngày giờ
-    const formattedData = formatDateTime(dateObj);
+  // Định dạng ngày giờ
+  const formattedData = formatDateTime(dateObj);
 
-    // Ghép chuỗi theo định dạng yêu cầu
-    const rawData = bodyString + X_APP_ID + formattedData;
+  // Ghép chuỗi theo định dạng yêu cầu
+  const rawData = bodyString + X_APP_ID + formattedData;
 
-    // Tạo chữ ký CRC32
-    return crc32(rawData);
+  // Tạo chữ ký CRC32
+  return crc32(rawData);
 }
 
 
@@ -112,6 +112,10 @@ function parseDate(dateString) {
   const [day, month, year] = dateString.split('/');
   return `${year}-${month}-${day}`;
 }
+function parseDate2(dateString) {
+  const [day, month, year] = dateString.split('-');
+  return `${day}/${month}/${year}`;
+}
 
 function dateToString(date) {
   const day = String(date.getDate()).padStart(2, "0");
@@ -132,7 +136,7 @@ function tinhtoan(tiethoc) {
 
 function lichtuan(lich) {
   if (typeof lich !== 'string') return { Tu: "1970-01-01", Den: "1970-01-01" };
-  const [tu, den] = lich.split(' đến ').map(parseDate);
+  const [tu, den] = lich.split(' đến ');
   return { Tu: tu, Den: den };
 }
 
@@ -158,7 +162,7 @@ app.get('/lichhoc', async (req, res) => {
     const password = req.query.pwd;
     const semesterCode = req.query.hocki;
 
-    const cacheKey = `${username}-${password}-${semesterCode? semesterCode : 'default'}`;
+    const cacheKey = `${username}-${password}-${semesterCode ? semesterCode : 'default'}`;
     if (cache.has(cacheKey)) {
       return res.set(responseHeaders).json(cache.get(cacheKey));
     }
@@ -204,9 +208,9 @@ app.get('/lichhoc', async (req, res) => {
 
     const semesters = doc.getElementById("drpSemester");
     let semester = semesters.value;
-    if (semesterCode){
+    if (semesterCode) {
       for (let option of semesters.options) {
-        if(option.text.includes(semesterCode)) {
+        if (option.text.includes(semesterCode)) {
           semester = option.value;
           break;
         }
@@ -247,21 +251,39 @@ app.get('/lichhoc', async (req, res) => {
 
       if (!ThoiGian && TTuan) {
         ngayhoct = lichtuan(TTuan);
+        result.push({
+          Tuan: TenHP.split('(')[0].trim(),
+          Tu: ngayhoct.Tu,
+          Den: ngayhoct.Den,
+        });
         continue;
       }
 
       const gv = GiangVien.split('\n');
-      const Meet = gv[1]?.startsWith('http') ? gv[1] : `https://${gv[1]}`;
+      const Meet = gv[1]?.startsWith('http') && gv[1].length > 0 ? gv[1] : `https://${gv[1]}`;
       const Ngay = thutrongtuan(ThuNgay, parseDate(ngayhoct.Tu), parseDate(ngayhoct.Den));
       endDate = dateToString(new Date(ngayhoct.Den));
 
-    //   if (!result[Ngay]) result[Ngay] = [];
+      //   if (!result[Ngay]) result[Ngay] = [];
+      let tieth = '';
+      let [start, end] = tiet.split(' --> ').map(Number);
+
+      for (let j = start; j <= end; j++) {
+        tieth += j + ', ';
+      }
+
+      // Xoá dấu phẩy cuối
+      tieth = tieth.slice(0, -2);
 
       result.push({
         STT,
         Ngay,
+        ThuNgay,
         ThoiGian,
         TenHP,
+        TietHoc: tieth,
+        Tu: ngayhoct.Tu,
+        Den: ngayhoct.Den,
         GiangVien: gv[0],
         Meet,
         DiaDiem
@@ -288,148 +310,148 @@ app.get('/lichhoc', async (req, res) => {
 
 // Middleware xử lý OPTIONS (CORS)
 app.options("*", (req, res) => {
-    res.status(204).set({
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    }).send();
+  res.status(204).set({
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  }).send();
 });
 
 // Route xử lý GET request
 app.get("/proxy", async (req, res) => {
-    const { url, token } = req.query;
+  const { url, token } = req.query;
 
-    if (!url || !token) {
-        return res.status(400).json({ error: "Missing required parameters: url or token" });
-    }
+  if (!url || !token) {
+    return res.status(400).json({ error: "Missing required parameters: url or token" });
+  }
 
-    try {
-        const timestamp = new Date();
-        const signature = generateXRequestSignature("GET", null, timestamp);
+  try {
+    const timestamp = new Date();
+    const signature = generateXRequestSignature("GET", null, timestamp);
 
-        const apiResponse = await axios.get(url, {
-            headers: {
-                Authorization: "Bearer " + token,
-                Accept: "application/json, text/plain, */*",
-                "Accept-Encoding": "gzip, deflate, br, zstd",
-                "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
-                "Cache-Control": "no-cache",
-                Connection: "keep-alive",
-                "Content-Type": "application/json",
-                Origin: "https://lms.ictu.edu.vn",
-                Referer: "https://lms.ictu.edu.vn/",
-                "User-Agent": req.headers["user-agent"] || "Mozilla/5.0",
-                "X-App-Id": X_APP_ID,
-                "x-request-signature": signature,
-            },
-        });
+    const apiResponse = await axios.get(url, {
+      headers: {
+        Authorization: "Bearer " + token,
+        Accept: "application/json, text/plain, */*",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+        "Content-Type": "application/json",
+        Origin: "https://lms.ictu.edu.vn",
+        Referer: "https://lms.ictu.edu.vn/",
+        "User-Agent": req.headers["user-agent"] || "Mozilla/5.0",
+        "X-App-Id": X_APP_ID,
+        "x-request-signature": signature,
+      },
+    });
 
-        res.json(apiResponse.data);
-    } catch (error) {
-        res.status(500).json({
-            error: "Internal server error",
-            details: error.response ? error.response.data : error.message,
-            data: error,
-        });
-    }
+    res.json(apiResponse.data);
+  } catch (error) {
+    res.status(500).json({
+      error: "Internal server error",
+      details: error.response ? error.response.data : error.message,
+      data: error,
+    });
+  }
 });
 
 // Route xử lý POST request
 app.post("/proxy", async (req, res) => {
-    console.log("Received request with:", req.query, req.body);
-    const { url, token, data } = req.body;
-    try {
-        const timestamp = new Date();
-        const signature = generateXRequestSignature("POST", data, timestamp);
-        console.log("Generated signature:", signature);
-        console.log("Url:", url);
-        console.log("Token:", token);
-        console.log("Data:", data);
-        const apiResponse = await axios.post(url, data, {
-            headers: {
-                Authorization: "Bearer " + token,
-                Accept: "application/json, text/plain, */*",
-                "Accept-Encoding": "gzip, deflate, br, zstd",
-                "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
-                "Cache-Control": "no-cache",
-                Connection: "keep-alive",
-                "Content-Type": "application/json",
-                Origin: "https://lms.ictu.edu.vn",
-                Referer: "https://lms.ictu.edu.vn/",
-                "User-Agent": req.headers["user-agent"] || "Mozilla/5.0",
-                "X-App-Id": X_APP_ID,
-                "x-request-signature": signature,
-            },
-        });
+  console.log("Received request with:", req.query, req.body);
+  const { url, token, data } = req.body;
+  try {
+    const timestamp = new Date();
+    const signature = generateXRequestSignature("POST", data, timestamp);
+    console.log("Generated signature:", signature);
+    console.log("Url:", url);
+    console.log("Token:", token);
+    console.log("Data:", data);
+    const apiResponse = await axios.post(url, data, {
+      headers: {
+        Authorization: "Bearer " + token,
+        Accept: "application/json, text/plain, */*",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+        "Content-Type": "application/json",
+        Origin: "https://lms.ictu.edu.vn",
+        Referer: "https://lms.ictu.edu.vn/",
+        "User-Agent": req.headers["user-agent"] || "Mozilla/5.0",
+        "X-App-Id": X_APP_ID,
+        "x-request-signature": signature,
+      },
+    });
 
-        res.json(apiResponse.data);
-    } catch (error) {
-        res.status(500).json({
-            error: "Internal server error",
-            details: error.response ? error.response.data : error.message,
-            data: error,
-        });
-    }
+    res.json(apiResponse.data);
+  } catch (error) {
+    res.status(500).json({
+      error: "Internal server error",
+      details: error.response ? error.response.data : error.message,
+      data: error,
+    });
+  }
 });
 app.get("/image", async (req, res) => {
-    const { id: imageId, token } = req.query;
-    if (!imageId || !token) {
-        return res.status(400).json({ error: "Missing required parameters: id or token" });
-    }
+  const { id: imageId, token } = req.query;
+  if (!imageId || !token) {
+    return res.status(400).json({ error: "Missing required parameters: id or token" });
+  }
 
-    try {
-        const apiUrl = `https://apps.ictu.edu.vn:9087/ionline/api/aws/file/${imageId}`;
-        const timestamp = new Date();
-        const signature = generateXRequestSignature("POST", {}, timestamp);
+  try {
+    const apiUrl = `https://apps.ictu.edu.vn:9087/ionline/api/aws/file/${imageId}`;
+    const timestamp = new Date();
+    const signature = generateXRequestSignature("POST", {}, timestamp);
 
-        const apiResponse = await axios.post(apiUrl, {}, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                Accept: "application/json, text/plain, */*",
-                "Accept-Encoding": "gzip, deflate, br, zstd",
-                "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7,fr-FR;q=0.6,fr;q=0.5",
-                "Cache-Control": "no-cache",
-                Connection: "keep-alive",
-                "Content-Type": "application/json",
-                Origin: "https://lms.ictu.edu.vn",
-                Referer: "https://lms.ictu.edu.vn/",
-                "X-App-Id": X_APP_ID,
-                "x-request-signature": signature,
-            },
-        });
+    const apiResponse = await axios.post(apiUrl, {}, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json, text/plain, */*",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7,fr-FR;q=0.6,fr;q=0.5",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+        "Content-Type": "application/json",
+        Origin: "https://lms.ictu.edu.vn",
+        Referer: "https://lms.ictu.edu.vn/",
+        "X-App-Id": X_APP_ID,
+        "x-request-signature": signature,
+      },
+    });
 
-        return res.status(200).json(apiResponse.data);
-    } catch (error) {
-        return res.status(500).json({ error: "Internal server error", details: error });
-    }
+    return res.status(200).json(apiResponse.data);
+  } catch (error) {
+    return res.status(500).json({ error: "Internal server error", details: error });
+  }
 });
 
 
 // Route xử lý GET request
 app.get("/api/lms", (req, res) => {
-    const { url } = req.query;
+  const { url } = req.query;
 
-    if (!url) {
-        return res.status(400).json({ error: "Missing required parameter: url" });
-    }
+  if (!url) {
+    return res.status(400).json({ error: "Missing required parameter: url" });
+  }
 
-    res.redirect(url);
+  res.redirect(url);
 });
 
 // Route xử lý POST request
 app.post("/api/lms", (req, res) => {
-    const { url } = req.query;
+  const { url } = req.query;
 
-    if (!url) {
-        return res.status(400).json({ error: "Missing required parameter: url" });
-    }
+  if (!url) {
+    return res.status(400).json({ error: "Missing required parameter: url" });
+  }
 
-    res.redirect(307, url); // Sử dụng mã trạng thái 307 để duy trì phương thức POST
+  res.redirect(307, url); // Sử dụng mã trạng thái 307 để duy trì phương thức POST
 });
 app.get("/", (req, res) => {
-        return res.status(400).send("Chào mừng đến với TranTienAPI lấy api từ lms");
+  return res.status(400).send("Chào mừng đến với TranTienAPI lấy api từ lms");
 });
 // Khởi động server
 app.listen(PORT, () => {
-    console.log(`Server đang chạy tại http://localhost:${PORT}`);
+  console.log(`Server đang chạy tại http://localhost:${PORT}`);
 });
