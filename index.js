@@ -106,7 +106,8 @@ const URLS = {
   studentTimeTable: "http://dangkytinchi.ictu.edu.vn/kcntt/Reports/Form/StudentTimeTable.aspx",
 };
 
-const cache = new Map();
+const NodeCache = require("node-cache");
+const cache = new NodeCache({ stdTTL: 60, checkperiod: 300 }); // TTL 1 phút, dọn mỗi 10 phút
 
 function parseDate(dateString) {
   const [day, month, year] = dateString.split('/');
